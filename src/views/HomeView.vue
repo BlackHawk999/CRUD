@@ -1,46 +1,84 @@
 <template>
   <div class="home">
-    <MainPart @onNewCrud="newCrud" :editedElement="editedElement" />
-    <CrudList
-      v-for="crud in cruds"
-      :key="crud.id"
-      :item="crud"
-      @onEditCrud="handleEditCrud"
-      @onDeleteCrud="handleDeletedCrud"
-    />
+    <MainPart :editedElement="editedElement" @edit="editCrud" @create="createCrud" />
+
+    <div v-if="!isLoading" class="cruds-wrapper">
+      <CrudList
+        v-for="crud in cruds"
+        :key="crud.id"
+        :item="crud"
+        @edit="editedElement = $event"
+        @delete="deleteCrud"
+      />
+    </div>
+
+    <Loader v-else size="md" />
   </div>
 </template>
 
 <script>
+import { mapState, mapActions } from "vuex";
+import Loader from "@/components/Loader"
 import MainPart from "@/components/MainPart.vue";
 import CrudList from "@/components/CrudList.vue";
-import { mapActions } from "vuex";
 
 export default {
   name: "HomeView",
-  components: { MainPart, CrudList },
-
+  components: { MainPart, CrudList, Loader },
   data() {
     return {
       crudList: [],
       editedElement: {},
+      isLoading: false
     };
   },
   computed: {
-    cruds() {
-      return this.$store.state.cruds;
-    },
+    ...mapState({
+      cruds: state => state.cruds
+    }),
   },
-  methods: { 
-    newCrud(crud) {
-      this.$store.dispatch("addCruds", crud);
+  methods: {
+    ...mapActions({
+      add: "addCruds",
+      getCruds: "fetchCruds",
+      delete: "deleteCrud",
+      edit: "editCrud"
+    }), 
+    async createCrud(crud) {
+      this.isLoading = true;
+
+      await this.add(crud);
+
+      this.isLoading = false
     },
-    handleEditCrud(el) {
-      this.editedElement = el;
+    async editCrud(el) {
+      this.isLoading = true;
+
+      await this.edit(el);
+
+      this.editedElement = {};
+      this.isLoading = false;
     },
+    deleteCrud(id) {
+      this.delete(id);
+    }
   },
-  mounted() {
-    this.$store.dispatch("FetchCruds");
+  async beforeMount() {
+    this.isLoading = true;
+
+    await this.getCruds();
+
+    this.isLoading = false;
   },
 };
 </script>
+
+<style lang="scss">
+.cruds {
+  &-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+}
+</style>

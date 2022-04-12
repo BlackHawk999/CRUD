@@ -49,36 +49,27 @@ export default {
         this.name = this.editedElement.name;
         this.description = this.editedElement.description;
         return true;
-      } else return false;
+      } 
+      return false;
     },
   },
   methods: {
     async submit() {
       if (this.editedMode) {
-        const obj = {
-          name: this.name,
-          description: this.description,
+        this.$emit('edit', {
           id: this.editedElement.id,
-        };
-        await this.$store.dispatch("EditCrud", obj);
-        await this.$store.dispatch("FetchCruds");
-      } else {
-        this.$emit("onNewCrud", {
           name: this.name,
           description: this.description,
+        });
+      } else {
+        this.$emit("create", {
           id: `crud_${Math.random() * 100}`,
+          name: this.name,
+          description: this.description,
         });
       }
       this.name = "";
       this.description = "";
-    },
-
-    emitUpdatedCrud() {
-      this.$emit("onUpdateCrud", {
-        name: this.name,
-        description: this.description,
-        id: this.editedElement.id,
-      });
     },
   },
 };
